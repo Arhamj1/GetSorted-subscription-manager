@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subtrack — Subscription Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  <style>
+    
+    :root {
+  --bg:          #0F1115;
+  --surface:     #171A21;
+  --surface-2:   #1F2430;
+  --border:      #2A2F3A;
+  --border-dark: #3A4150;
+
+  --text:        #F5F7FA;
+  --text-mid:    #C5CAD3;
+  --text-faint:  #8A90A2;
+
+  --green:       #4ADE80;
+  --green-bg:    #163C2F;
+
+  --amber:       #FACC15;
+  --amber-bg:    #3A2E10;
+
+  --blue:        #60A5FA;
+  --blue-bg:     #16263F;
+
+  --red:         #F87171;
+  --red-bg:      #3F1A1A;
+
+  --radius:      12px;
+  --font:        'Inter', sans-serif;
+  --mono:        'DM Mono', monospace;
+}
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      letter-spacing: 0.2px;
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─────────────────────────────────────────
+       PAGE WRAPPER
+    ───────────────────────────────────────── */
+    .page {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ─────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 48px;
+  height: 48px;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #FFFFFF; /* bright white */
+  background: linear-gradient(90deg, #FFFFFF, #A78BFA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+    .logo-tagline {
+  font-size: 0.9rem;
+  color: #B0B7C3; /* soft grey, readable */
+}
+
+    /* ─────────────────────────────────────────
+       BUTTONS
+    ───────────────────────────────────────── */
+    button {
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      transition: opacity 0.15s, background 0.15s, box-shadow 0.15s;
+      line-height: 1;
+    }
+    button:active { opacity: 0.85; }
+    button svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .btn-dark {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  color: white;
+}
+    .btn-dark:hover  { background: #333; }
+
+    .btn-light { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-light:hover { background: var(--surface-2); }
+
+    .btn-ghost { background: transparent; color: var(--text-mid); padding: 7px 10px; }
+    .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-danger:hover { background: #a33309; }
+
+    .btn-delete-ghost { background: transparent; color: var(--text-faint); padding: 7px 10px; }
+    .btn-delete-ghost:hover { background: var(--red-bg); color: var(--red); }
+
+    /* ─────────────────────────────────────────
+       SUMMARY CARDS (3-column grid)
+    ───────────────────────────────────────── */
+    .section-label {
+      font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 1px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    /* The horizontal line after the label */
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+      font-family: var(--font);
+      height: 120px;   
+  display: flex;
+  flex-direction: column;
+      justify-content: space-between;
+    }
+    /* Colored top stripe per card */
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .stripe-green::before { background: var(--green); }
+    .stripe-amber::before { background: var(--amber); }
+    .stripe-blue::before  { background: var(--blue);  }
+
+    .stat-label { font-size: 0.85rem; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .stat-value { font-size: 2.3rem; font-weight: 700; font-family: var(--mono); letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+    .stat-sub   { font-size: 0.77rem; color: var(--text-faint); }
+
+    
+    .upcoming-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+
+  padding: 8px 0;
+}
+.upcoming-item span {
+  font-family: var(--font);
+}
+.upcoming-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.upcoming-date {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.chart-container {
+  width: 140px;
+  height: 140px;
+  margin-right: 10px;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.upcoming-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#upcomingArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+#upcomingList {
+  scrollbar-width: none;    
+}
+#categoryChart {
+  width: 260px !important;
+  height: 260px !important;
+  display: block;
+  margin: 20px auto;
+}
+#upcomingList::-webkit-scrollbar {
+  display: none; 
+}
+#upcomingList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 4px;
+}
+.upcoming-cost {
+  font-size: 0.95rem;        
+  font-weight: 600;          
+  color: var(--text);        
+}
+    .upcoming-item:last-child { border-bottom: none; }
+    .upcoming-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500; 
+}
+    .upcoming-date { color: var(--muted); font-family: var(--mono); }
+    .upcoming-cost { font-weight: 500; font-family: var(--mono); }
+
+ 
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    /* The outer box that looks like the input field */
+    .search-box {
+      display: flex;          /* flex row: icon then input */
+      align-items: center;
+      flex: 1;
+      min-width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 12px;        /* horizontal padding on the wrapper */
+      gap: 8px;               /* gap between icon and text */
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    /* Highlight the wrapper when the inner input is focused */
+    .search-box:focus-within {
+      border-color: var(--border-dark);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+    }
+    /* The icon — just a normal inline element, no positioning tricks */
+    .search-box svg {
+      width: 15px;
+      height: 15px;
+      color: var(--text-faint);
+      flex-shrink: 0;         /* never squish the icon */
+    }
+    /* The actual <input> — no border, no background, takes remaining width */
+    .search-box input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      color: var(--text);
+      width: 100%;
+      padding: 9px 0;         /* vertical padding only; horizontal handled by wrapper */
+    }
+    .search-box input::placeholder { color: var(--text-faint); }
+
+    /* Category and sort dropdowns */
+    .toolbar select {
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 32px 9px 12px;
+      appearance: none;
+      /* custom dropdown arrow via inline SVG data-URL */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239E9C97' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .toolbar select:focus { border-color: var(--border-dark); }
+
+    /* ─────────────────────────────────────────
+       SUBSCRIPTION CARDS
+    ───────────────────────────────────────── */
+    .cards-meta {
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+      /* subtle entrance animation */
+      animation: pop-in 0.25s ease both;
+    }
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+      transform: translateY(-2px);
+      border-color: var(--border-dark);
+    }
+
+    /* Top row: name + cost */
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .card-name { font-size: 1.1rem; font-weight: 700; }
+
+    /* Category pill */
+    .pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 0.68rem;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .pill-entertainment { background: #2E1065; color: #C4B5FD; }
+.pill-music { background: #052E16; color: #4ADE80; }
+.pill-ai-tools { background: #172554; color: #60A5FA; }
+.pill-other { background: #1F2937; color: #D1D5DB; }
+.pill-food { 
+  background: #3A1F0F; 
+  color: #FB923C; 
+}
+    .card-cost { font-family: var(--mono); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.5px; }
+    .card-cycle { font-size: 0.7rem; color: var(--text-faint); display: block; text-align: right; }
+
+    #upcomingList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+    .card-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+    .detail-label { color: var(--text-faint); }
+    .detail-value { color: var(--text-mid); font-family: var(--mono); font-size: 0.78rem; font-weight: 500; }
+    .detail-value.urgent { color: var(--red); }
+
+    /* Auto-pay badge */
+    .autopay-on  { background: var(--green-bg); color: var(--green); }
+    .autopay-off { background: var(--surface-2); color: var(--text-faint); }
+
+    /* Bottom row: edit + delete buttons */
+    .card-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+    /* ─────────────────────────────────────────
+       EMPTY STATE
+    ───────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 70px 20px;
+      grid-column: 1 / -1;
+    }
+    .empty-circle {
+      width: 60px; height: 60px;
+      background: var(--surface-2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .empty-circle svg { width: 24px; height: 24px; color: var(--text-faint); }
+    .empty h3 { font-size: 1rem; margin-bottom: 6px; }
+    .empty p  { font-size: 0.85rem; color: var(--text-faint); margin-bottom: 20px; }
+
+    /* ─────────────────────────────────────────
+       MODAL OVERLAY
+    ───────────────────────────────────────── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 9, 7, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;   /* slide up from bottom on mobile */
+      justify-content: center;
+      /* hidden by default */
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    @media (min-width: 600px) {
+      .overlay { align-items: center; }  /* centered on desktop */
+    }
+
+    .modal {
+      background: var(--surface);
+      width: 100%;
+      max-width: 500px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 26px 26px 32px;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+      max-height: 92vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.25s ease;
+    }
+    .overlay.open .modal { transform: translateY(0); }
+
+    @media (min-width: 600px) {
+      .modal { border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+    .modal-title { font-size: 1.05rem; font-weight: 600; }
+
+    /* ─────────────────────────────────────────
+       FORM INSIDE MODAL
+    ───────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field.full { grid-column: 1 / -1; }  /* spans both columns */
+
+    label { font-size: 0.77rem; font-weight: 500; color: var(--text-mid); }
+
+    /* Shared style for text/number/date inputs and selects */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    .form-select {
+      font-family: var(--font);
+      font-size: 0.875rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, .form-select:focus {
+      border-color: var(--border-dark);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+    }
+    input::placeholder { color: var(--text-faint); }
+    input[type="number"] { font-family: var(--mono); }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239E9C97' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+      cursor: pointer;
+    }
+
+    /* Auto-pay toggle row */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .toggle-row:hover { background: var(--surface-2); }
+    .toggle-row span { font-size: 0.875rem; color: var(--text-mid); }
+
+    /* The actual toggle switch */
+    .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--border-dark);
+      border-radius: 99px;
+      transition: background 0.15s;
+    }
+    .toggle-thumb {
+      position: absolute;
+      left: 3px; top: 3px;
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: transform 0.15s;
+    }
+    .toggle input:checked ~ .toggle-track { background: var(--green); }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─────────────────────────────────────────
+       CONFIRM DELETE MODAL
+    ───────────────────────────────────────── */
+    .confirm-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 26px;
+      max-width: 360px;
+      width: calc(100% - 40px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      transform: scale(0.96);
+      transition: transform 0.2s ease;
+    }
+    .overlay.open .confirm-box { transform: none; }
+    .confirm-box h3 { font-size: 1rem; margin-bottom: 8px; }
+    .confirm-box p  { font-size: 0.875rem; color: var(--text-mid); margin-bottom: 22px; line-height: 1.55; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ─────────────────────────────────────────
+       TOAST MESSAGES
+    ───────────────────────────────────────── */
+    #toasts {
+      position: fixed;
+      bottom: 20px; right: 20px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+  background: var(--surface-2);   /* dark background */
+  color: var(--text);             /* light text */
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 0.84rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.35);
+  animation: slide-up 0.25s ease both;
+}
+    .toast.error { background: var(--red); }
+    .toast.hide  { animation: fade-out 0.2s ease forwards; }
+
+    /* Auth-specific centered toast */
+    #authToastEl {
+      position: fixed;
+      top: 38%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-12px);
+      z-index: 9999;
+      background: var(--red);
+      color: #fff;
+      padding: 16px 28px;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      max-width: 360px;
+      width: max-content;
+      animation: auth-toast-in 0.3s cubic-bezier(.22,1,.36,1) forwards;
+      pointer-events: none;
+    }
+    #authToastEl.hide {
+      animation: auth-toast-out 0.25s ease forwards;
+    }
+    @keyframes auth-toast-in {
+      from { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(0.95); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+    }
+    @keyframes auth-toast-out {
+      to { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.97); }
+    }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    @keyframes fade-out {
+      to { opacity: 0; transform: translateY(4px); }
+    }
+
+    /* ─────────────────────────────────────────
+       RESPONSIVE  (mobile breakpoints)
+    ───────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .summary-row { grid-template-columns: 1fr; }
+      .form-grid   { grid-template-columns: 1fr; }
+      .field.full  { grid-column: 1; }
+      .page        { padding: 0 16px 60px; }
+      .header      { padding: 18px 0 20px; margin-bottom: 24px; }
+    }
+    @media (max-width: 480px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .modal      { padding: 20px 18px 28px; }
+    }
+
+    /* ─────────────────────────────────────────
+       ADDED: Custom logo dropdown styles
+    ───────────────────────────────────────── */
+    .custom-select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    /* NEW: Left layout with logo */
+.card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-logo-box {
+  width: 48px; 
+  height: 48px;
+
+  border-radius: 12px;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(255,255,255,0.05);
+  background: var(--surface);
+}
+#bankDisplay {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#chartOverlay .modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#categoryChart {
+  width: 260px !important;
+  height: 260px !important;
+}
+
+
+.chart-link:hover::after {
+  width: 100%;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.nav-link {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #A78BFA;
+  cursor: pointer;
+  position: relative;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+}
+.nav-link:hover {
+  color: #FFFFFF;
+  background: rgba(167, 139, 250, 0.15);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  bottom: 4px;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, #A78BFA, #7C3AED);
+  transition: width 0.25s ease;
+  border-radius: 2px;
+}
+
+
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  bottom: 4px;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, #A78BFA, #7C3AED);
+  transition: width 0.25s ease;
+  border-radius: 2px;
+}
+
+.nav-link:hover::after {
+  width: calc(100% - 20px);
+}
+.card-logo {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  transform: scale(1.4);  
+}
+
+  .custom-select-trigger {
+  width: 100%;
+  padding: 14px 16px;
+  min-height: 60px;   
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  color: var(--text);
+}
+.custom-select-trigger img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex-shrink: 0;
+
+  background: #1F2430;
+  padding: 6px;
+  border-radius: 8px;
+}
+    .custom-select-trigger:hover,
+    .custom-select-wrapper.open .custom-select-trigger {
+      border-color: var(--border-dark);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+    }
+
+    .custom-select-selected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  flex: 1;
+  min-height: 40px;  
+}
+    .custom-select-selected img {
+   width: 40px !important;   
+  height: 40px !important;
+
+  object-fit: contain;
+  flex-shrink: 0;
+
+  background: #1F2430;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+    .cs-placeholder { color: var(--text-faint); }
+
+    .custom-select-list {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 200;
+      list-style: none;
+      padding: 4px 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .custom-select-wrapper.open .custom-select-list {
+      display: block;
+    }
+    .bank-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+
+  background: #1F2430;
+  padding: 6px;
+  border-radius: 8px;
+
+  flex-shrink: 0;
+}
+
+    .cs-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.12s;
+      color: var(--text);
+    }
+    .cs-option:hover { background: var(--surface-2); }
+    .cs-option.selected { background: var(--surface-2); font-weight: 500; }
+
+    .cs-option img {
+      width: 40px !important;  
+  height: 40px !important;
+
+  object-fit: contain;
+  flex-shrink: 0;
+      
+      filter: none;
+    }
+    .cs-others-icon { font-size: 1rem; width: 24px; text-align: center; flex-shrink: 0; }
+    .cs-option-others { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 10px; }
+
+    /* ADDED: Logo shown inside the subscription card name */
+    .card-name {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .card-logo {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+<div id="loginPage" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;">
+
+  <h2 id="authTitle" style="font-size:2rem;">Login to GetSorted</h2>
+
+  <input type="email" id="email" placeholder="Email"
+    style="padding:10px;width:250px;border-radius:8px;border:1px solid #ccc;">
+
+  <input type="password" id="password" placeholder="Password"
+    style="padding:10px;width:250px;border-radius:8px;border:1px solid #ccc;">
+
+  <div style="display:flex;gap:10px;">
+    <button id="signupBtn" onclick="handleSignupClick()">Sign Up</button>
+    <button id="loginBtn" onclick="handleLoginClick()">Login</button>
+  </div>
+
+  <p id="authSwitch" style="font-size:0.85rem;color:#8A90A2;display:none;">
+    Already have an account? <a href="#" onclick="setLoginMode();return false;" style="color:#60A5FA;">Login instead</a>
+  </p>
+
+</div>
+<div id="appPage" style="display:none;">
+  <div class="page">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <path d="M2 10h20"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">GetSorted</div>
+        <div class="logo-tagline">Organize. Track. Simplify.</div>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <span class="nav-link" id="openChartBtn">Chart</span>
+      <span class="nav-link" id="openAboutBtn">About</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-shrink:0;">
+      <button class="btn-dark" id="openAddBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Subscription
+      </button>
+      <button onclick="logout()" class="btn-light">Logout</button>
+    </div>
+  </div>
+
+  <!-- ══════════ SUMMARY CARDS ══════════ -->
+  <div class="section-label">Overview</div>
+  <div class="summary-row">
+
+    <div class="stat-card stripe-green">
+      <div class="stat-label">Monthly Spend</div>
+      <div class="stat-value" id="statMonthly">₹0</div>
+      <div class="stat-sub"  id="statYearly">₹0 / year</div>
+    </div>
+
+    <div class="stat-card stripe-amber">
+      <div class="stat-label">Active Subscriptions</div>
+      <div class="stat-value" id="statCount">0</div>
+      <div class="stat-sub"  id="statCycles">0 monthly · 0 yearly</div>
+    </div>
+
+    <div class="stat-card stripe-blue">
+      <div class="stat-label">Due in Next 7 Days</div>
+      <div id="upcomingArea">
+        <div class="stat-sub" id="noUpcoming">No upcoming payments</div>
+        <div id="upcomingList"></div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ══════════ TOOLBAR ══════════ -->
+  <div class="section-label">Subscriptions</div>
+  <div class="toolbar">
+
+    <!--
+      SEARCH BAR — THE PROPER FIX
+      ──────────────────────────────────────────────────────
+      The container (.search-box) is a flex row.
+      It holds TWO children side-by-side:
+        1. The SVG icon  — fixed size, never grows
+        2. The <input>   — fills remaining space (flex: 1)
+      The border/background is on the WRAPPER, not the input.
+      This means icon and text are PHYSICALLY SEPARATE elements
+      that can never overlap — no padding math required.
+      ──────────────────────────────────────────────────────
+    -->
+    <div class="search-box">
+      <!-- 1. Icon — sits to the left, vertically centered by the flex container -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <!-- 2. Input — no border, no background; wrapper provides those -->
+      <input type="text" id="searchInput" placeholder="Search subscriptions…" autocomplete="off" />
+    </div>
+
+    <select id="filterCategory">
+      <option value="">All Categories</option>
+      <option value="Entertainment">Entertainment</option>
+      <option value="Education">Education</option>
+      <option value="Utilities">Utilities</option>
+      <option value="Food">Food</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <select id="sortBy">
+      <option value="date">Sort: Date</option>
+      <option value="cost-low">Cost: Low → High</option>
+      <option value="cost-high">Cost: High → Low</option>
+      <option value="name">Name A–Z</option>
+    </select>
+
+  </div>
+
+  <!-- ══════════ CARDS ══════════ -->
+  <div class="cards-meta" id="cardsMeta">0 subscriptions</div>
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  </div>
+</div>
+
+
+<!-- ══════════ ADD / EDIT MODAL ══════════ -->
+<div class="overlay" id="formOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="formTitle">Add Subscription</div>
+      <button class="btn-ghost" id="closeFormBtn" style="padding:6px 8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form id="subForm" novalidate>
+      <div class="form-grid">
+
+        <!-- UPDATED: Replaced text input with custom logo dropdown -->
+        <div class="field full">
+          <label>Subscription Name</label>
+
+          <!-- Custom dropdown trigger button -->
+          <div class="custom-select-wrapper" id="customSelectWrapper">
+            <button type="button" class="custom-select-trigger" id="customSelectTrigger" onclick="toggleCustomDropdown()">
+              <span class="custom-select-selected" id="customSelectDisplay">
+                <span class="cs-placeholder">Choose a service…</span>
+              </span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9E9C97" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
+            <!-- UPDATED: Dropdown list — 11 options with reliable logo URLs + onerror fallback -->
+            <ul class="custom-select-list" id="customSelectList">
+              <li class="cs-option" data-value="Netflix" onclick="selectService(this)">
+                <img src="https://platform.theverge.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/15844974/netflixlogo.0.0.1466448626.png?quality=90&strip=all&crop=1.2535702951444%2C0%2C97.492859409711%2C100&w=2400" alt="Netflix" onerror="this.src='';this.style.background='#E50914';this.style.borderRadius='3px';" />
+                Netflix
+              </li>
+              <li class="cs-option" data-value="Amazon Prime Video" onclick="selectService(this)">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSimeX6Cw-Ry-AZjNIjjCmcVRyvltwKVj2Mbw&s" alt="Amazon Prime Video" onerror="this.src='';this.style.background='#00A8E1';this.style.borderRadius='3px';" />
+                Amazon Prime Video
+              </li>
+              <li class="cs-option" data-value="JioHotstar" onclick="selectService(this)">
+                <img src="https://play-lh.googleusercontent.com/bp4jknyVZ8yDKhER9thIS1p9MBeU2LABqBX-sO8uaL1h5_keqlgMUmXv-CjfRWaqKw" alt="JioHotstar" onerror="this.src='';this.style.background='#1F3A93';this.style.borderRadius='3px';" />
+                JioHotstar
+              </li>
+              <li class="cs-option" data-value="SonyLiv" onclick="selectService(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f7/SonyLIV_2020.png" alt="SonyLiv" onerror="this.src='';this.style.background='#0057C8';this.style.borderRadius='3px';" />
+                SonyLiv
+              </li>
+              <li class="cs-option" data-value="Spotify" onclick="selectService(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Spotify_App_Logo.svg/960px-Spotify_App_Logo.svg.png" alt="Spotify" onerror="this.src='';this.style.background='#1DB954';this.style.borderRadius='3px';" />
+                Spotify
+              </li>
+              <li class="cs-option" data-value="Apple Music" onclick="selectService(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_Music_icon.svg/500px-Apple_Music_icon.svg.png" alt="Apple Music" onerror="this.src='';this.style.background='#FA243C';this.style.borderRadius='3px';" />
+                Apple Music
+              </li>
+              <li class="cs-option" data-value="Zee5" onclick="selectService(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5a/Zee5-official-logo.jpeg" alt="Zee5" onerror="this.src='';this.style.background='#6B1FC1';this.style.borderRadius='3px';" />
+                Zee5
+              </li>
+              <!-- ADDED: ChatGPT -->
+              <li class="cs-option" data-value="ChatGPT" onclick="selectService(this)">
+                <img src="https://static.vecteezy.com/system/resources/previews/021/608/790/non_2x/chatgpt-logo-chat-gpt-icon-on-black-background-free-vector.jpg" alt="ChatGPT" onerror="this.src='';this.style.background='#10A37F';this.style.borderRadius='3px';" />
+                ChatGPT
+              </li>
+              <!-- ADDED: Gemini -->
+              <li class="cs-option" data-value="Gemini" onclick="selectService(this)">
+                <img src="https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/gemini-color.png" alt="Gemini" onerror="this.src='';this.style.background='#4285F4';this.style.borderRadius='3px';" />
+                Gemini
+              </li>
+              <!-- ADDED: Claude -->
+              <li class="cs-option" data-value="Claude" onclick="selectService(this)">
+                <img src="https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/claude-color.png" alt="Claude" onerror="this.src='';this.style.background='#D4A574';this.style.borderRadius='3px';" />
+                Claude
+              </li>
+              <li class="cs-option" data-value="Zomato Gold" onclick="selectService(this)">
+  <img src="https://cdn.iconscout.com/icon/free/png-256/free-zomato-logo-icon-svg-download-png-1637644.png" alt="Zomato Gold" />
+  Zomato Gold
+</li>
+
+<li class="cs-option" data-value="Swiggy One" onclick="selectService(this)">
+  <img src="https://1000logos.net/wp-content/uploads/2021/05/Swiggy-emblem.png" alt="Swiggy One" />
+  Swiggy One
+</li>
+              <li class="cs-option cs-option-others" data-value="Others" onclick="selectService(this)">
+                <span class="cs-others-icon">✏️</span>
+                Others
+              </li>
+            </ul>
+          </div>
+
+          <!-- ADDED: Hidden input that holds the actual name value for form submission -->
+          <input type="text" id="fName" style="display:none;" required />
+
+          <!-- ADDED: "Others" custom name input, shown only when Others is selected -->
+          <input type="text" id="fNameOthers" placeholder="Enter subscription name…"
+                 style="display:none; margin-top:8px;" />
+        </div>
+
+        <div class="field">
+          <label for="fCost">Cost (₹)</label>
+          <input type="text" id="fCost" placeholder="0" inputmode="decimal" required />
+        </div>
+
+        <div class="field">
+          <label for="fCycle">Billing Cycle</label>
+          <select id="fCycle" class="form-select">
+            <option value="Monthly">Monthly</option>
+            <option value="Yearly">Yearly</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fDate">Next Billing Date</label>
+          <input type="text" id="fDate" placeholder="Select date">
+        </div>
+
+        <div class="field">
+          <label for="fCategory">Category</label>
+          <!-- UPDATED CATEGORY OPTIONS -->
+<select id="fCategory" class="form-select">
+  <option value="Entertainment">Entertainment</option>
+  <option value="Music">Music</option>
+  <option value="AI Tools">AI Tools</option>
+  <option value="Food">Food</option>
+  <option value="Other">Others</option>
+</select>
+        </div>
+        <!-- ADDED: Payment Method -->
+<div class="field">
+  <label for="fPayment">Payment Method</label>
+  <select id="fPayment" class="form-select" onchange="handlePaymentChange()">
+    <option value="UPI">UPI</option>
+    <option value="Card">Card</option>
+  </select>
+</div>
+        <!-- ADDED: Card Details -->
+<div id="cardDetails" style="display:none;" class="field full">
+
+  <label>Card Details</label>
+
+  <div class="custom-select-wrapper" id="bankSelectWrapper">
+    <button type="button" class="custom-select-trigger" onclick="toggleBankDropdown()">
+      <span id="bankDisplay">Choose bank…</span>
+    </button>
+
+    <ul class="custom-select-list" id="bankList">
+      <li class="cs-option" data-value="HDFC" onclick="selectBank(this)">
+  <img src="https://companieslogo.com/img/orig/HDB-bb6241fe.png?t=1720244492"> HDFC
+</li>
+
+<li class="cs-option" data-value="ICICI" onclick="selectBank(this)">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRo2BsQuRvTKDR2dsR3IqwcM5-WtYw3vCybTg&s"> ICICI
+</li>
+
+<li class="cs-option" data-value="SBI" onclick="selectBank(this)">
+  <img src="https://images.seeklogo.com/logo-png/39/2/sbi-logo-png_seeklogo-398127.png"> SBI
+</li>
+
+<li class="cs-option" data-value="Axis" onclick="selectBank(this)">
+  <img src="https://gimgs2.nohat.cc/thumb/f/640/axis-bank-logo-image-credit-card-bank--4909962627121152.jpg"> Axis
+</li>
+    </ul>
+  </div>
+
+  <input type="text" id="fBank" style="display:none;">
+  <input type="text" id="fCardLast4" placeholder="Last 4 digits"
+    maxlength="4"
+    oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+    style="margin-top:8px;" />
+</div>
+
+        <div class="field full">
+          <label>Auto-Pay</label>
+          <label class="toggle-row" for="fAutopay">
+            <span>Automatically charged each cycle</span>
+            <div class="toggle">
+              <input type="checkbox" id="fAutopay" />
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </div>
+          </label>
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-light" id="cancelFormBtn">Cancel</button>
+        <button type="submit" class="btn-dark"  id="saveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══════════ CONFIRM DELETE MODAL ══════════ -->
+<div class="overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3>Delete Subscription?</h3>
+    <p id="confirmMsg">This will permanently remove this subscription.</p>
+    <div class="confirm-actions">
+      <button class="btn-light"   id="cancelDeleteBtn">Cancel</button>
+      <button class="btn-danger"  id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+<!-- ══════════ CHART MODAL ══════════ -->
+<div class="overlay" id="chartOverlay">
+  <div class="modal" style="max-width: 400px; display:flex; flex-direction:column; align-items:center;">
+    
+    <div class="modal-header">
+      <div class="modal-title">Spending Breakdown</div>
+      <button class="btn-ghost" onclick="closeOverlay('chartOverlay')">
+        ✕
+      </button>
+    </div>
+
+    <div style="width: 100%; height: 300px;">
+  <canvas id="categoryChart"></canvas>
+</div>
+
+  </div>
+</div>
+<!-- ══════════ ABOUT MODAL ══════════ -->
+<div class="overlay" id="aboutOverlay">
+  <div class="modal" style="max-width: 420px; display:flex; flex-direction:column; gap:12px;">
+    
+    <div class="modal-header">
+      <div class="modal-title">About GetSorted</div>
+      <button class="btn-ghost" onclick="closeOverlay('aboutOverlay')">
+        ✕
+      </button>
+    </div>
+
+    <p style="color: var(--text-mid); font-size: 0.95rem; line-height: 1.6;">
+      GetSorted is your personal subscription manager designed to help you stay in control of your recurring expenses.
+      <br><br>
+      From streaming platforms to AI tools and food memberships, track everything in one place, avoid unexpected charges, 
+      and understand where your money goes with simple insights.
+      <br><br>
+      Stay organized. Track smarter. Spend better.
+    </p>
+
+  </div>
+</div>
+
+<!-- ══════════ TOASTS ══════════ -->
+<div id="toasts"></div>
+
+
+<script>
+  /* ════════════════════════════════════════════
+     DATA  —  load/save from localStorage
+  ════════════════════════════════════════════ */
+  let categoryChart;
+
+function renderCategoryChart() {
+  const categoryTotals = {};
+
+  subscriptions.forEach(sub => {
+    const monthly = monthlyAmount(sub);
+    categoryTotals[sub.category] = (categoryTotals[sub.category] || 0) + monthly;
+  });
+
+  const labels = Object.keys(categoryTotals);
+  const data = Object.values(categoryTotals);
+
+  if (labels.length === 0) return;
+
+  const canvas = document.getElementById('categoryChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const colors = [
+  '#4ADE80',
+  '#60A5FA',
+  '#FACC15',
+  '#F87171',
+  '#A78BFA'
+];
+  
+  if (categoryChart) {
+    categoryChart.destroy();
+    categoryChart = null;
+  }
+
+  categoryChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+  data,
+  backgroundColor: colors,
+  borderWidth: 0,
+  hoverOffset: 6,
+  hoverBorderWidth: 0
+}]
+    },
+    options: {
+  responsive: true,
+  maintainAspectRatio: false,
+
+  plugins: {
+  legend: { display: false },
+
+  tooltip: {
+    displayColors: false,
+
+    callbacks: {
+      title: function() {
+        return ''; // removes top duplicate line
+      },
+      label: function(context) {
+        return `${context.label}: ₹${context.raw.toFixed(2)}`;
+      }
+    }
+  }
+}
+}
+  });
+}
+
+  const STORAGE_KEY = 'subtrack_v2';
+
+  // Load saved subscriptions, or start with an empty array
+  let subscriptions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+  // Save the current array back to localStorage
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(subscriptions));
+  }
+
+  // Make a simple unique ID (timestamp + random string)
+  function makeId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+
+
+  /* ════════════════════════════════════════════
+     MONEY  —  format numbers as ₹ currency
+  ════════════════════════════════════════════ */
+
+  function rupees(amount) {
+    return '₹' + Number(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+
+  // Yearly subscriptions count as cost/12 per month
+  function monthlyAmount(sub) {
+    return sub.cycle === 'Yearly' ? sub.cost / 12 : sub.cost;
+  }
+
+
+  /* ════════════════════════════════════════════
+     DATES  —  helpers for billing dates
+  ════════════════════════════════════════════ */
+
+  // Parse "YYYY-MM-DD" as a local date (avoid UTC timezone issues)
+  function parseDate(str) {
+    return new Date(str + 'T00:00:00');
+  }
+
+  // "2 Jan 2025" style
+  function niceDate(str) {
+    return parseDate(str).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  // How many days from today until the given date (negative = past)
+  function daysUntil(str) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const due   = parseDate(str);
+    return Math.round((due - today) / 86400000);
+  }
+
+
+  /* ════════════════════════════════════════════
+     STATE  —  current filter/sort/search values
+  ════════════════════════════════════════════ */
+
+  let searchText     = '';
+  let filterCategory = '';
+  let sortMode       = 'date';
+  let editingId      = null;   // null = adding new, string = editing existing
+  let deletingId     = null;   // ID of subscription we're about to delete
+
+
+  /* ════════════════════════════════════════════
+     FILTER + SORT  —  get the display list
+  ════════════════════════════════════════════ */
+
+  function getVisibleSubs() {
+    let list = [...subscriptions];
+
+    // Filter by search text (case-insensitive)
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      list = list.filter(s => s.name.toLowerCase().includes(q));
+    }
+
+    // Filter by category
+    if (filterCategory) {
+      list = list.filter(s => s.category === filterCategory);
+    }
+
+    // Sort
+    if (sortMode === 'date')       list.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+    if (sortMode === 'cost-low')   list.sort((a, b) => monthlyAmount(a) - monthlyAmount(b));
+    if (sortMode === 'cost-high')  list.sort((a, b) => monthlyAmount(b) - monthlyAmount(a));
+    if (sortMode === 'name')       list.sort((a, b) => a.name.localeCompare(b.name));
+
+    return list;
+  }
+  function handlePaymentChange() {
+  const method = document.getElementById('fPayment').value;
+  document.getElementById('cardDetails').style.display =
+    method === 'Card' ? 'block' : 'none';
+}
+
+function toggleBankDropdown() {
+  document.getElementById('bankSelectWrapper').classList.toggle('open');
+}
+
+function selectBank(li) {
+  const value = li.dataset.value;
+  const img = li.querySelector('img');
+
+  document.getElementById('bankDisplay').innerHTML =
+  `<img src="${img.src}" class="bank-logo"> ${value}`;
+
+  document.getElementById('fBank').value = value;
+  document.getElementById('fBank').dataset.logo = img.src;
+
+  document.getElementById('bankSelectWrapper').classList.remove('open');
+}
+
+
+
+
+  
+  /* ════════════════════════════════════════════
+     AUTO EXPIRY HANDLING
+  ════════════════════════════════════════════ */
+
+  function advanceBillingDate(dateStr, cycle) {
+    const d = parseDate(dateStr);
+
+    if (cycle === 'Yearly') {
+      d.setFullYear(d.getFullYear() + 1);
+    } else {
+      d.setMonth(d.getMonth() + 1);
+    }
+
+    return d.toISOString().split('T')[0];
+  }
+
+  function processExpiredSubscriptions() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    let changed = false;
+
+    subscriptions = subscriptions.filter(sub => {
+      if (!sub.date) return true;
+
+      let dueDate = parseDate(sub.date);
+
+      while (dueDate < today) {
+
+        // Auto-pay ON → move billing date forward
+        if (sub.autopay) {
+          sub.date = advanceBillingDate(sub.date, sub.cycle);
+          dueDate = parseDate(sub.date);
+          changed = true;
+        }
+
+        // Auto-pay OFF → delete subscription
+        else {
+          changed = true;
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    if (changed) {
+      save();
+    }
+  }
+
+
+
+  function render() {
+    renderSummary();
+    renderCards();
+    renderCategoryChart();
+  }
+
+  // ── Summary stats at the top ──
+  function renderSummary() {
+    const totalMonthly = subscriptions.reduce((sum, s) => sum + monthlyAmount(s), 0);
+    const totalYearly  = totalMonthly * 12;
+    const monthlyCount = subscriptions.filter(s => s.cycle === 'Monthly').length;
+    const yearlyCount  = subscriptions.filter(s => s.cycle === 'Yearly').length;
+
+    document.getElementById('statMonthly').textContent = rupees(totalMonthly);
+    document.getElementById('statYearly').textContent  = rupees(totalYearly) + ' / year';
+    document.getElementById('statCount').textContent   = subscriptions.length;
+    document.getElementById('statCycles').textContent  = `${monthlyCount} monthly · ${yearlyCount} yearly`;
+
+    // Payments due in the next 7 days
+    const soon = subscriptions
+      .filter(s => { const d = daysUntil(s.date); return d >= 0 && d <= 7; })
+      .sort((a, b) => parseDate(a.date) - parseDate(b.date));
+
+    const noMsg  = document.getElementById('noUpcoming');
+    const listEl = document.getElementById('upcomingList');
+
+    if (soon.length === 0) {
+      noMsg.style.display  = '';
+      listEl.innerHTML = '';
+    } else {
+      noMsg.style.display  = 'none';
+      listEl.innerHTML = soon.map(s => `
+        <div class="upcoming-item">
+          <span class="upcoming-name">${esc(s.name)}</span>
+          <span class="upcoming-date">${niceDate(s.date)}</span>
+          <span class="upcoming-cost">${rupees(s.cost)}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  
+  function renderCards() {
+    const list = getVisibleSubs();
+    const grid = document.getElementById('cardsGrid');
+
+    document.getElementById('cardsMeta').textContent =
+      list.length === 1 ? '1 subscription' : `${list.length} subscriptions`;
+
+    // Show empty state if nothing to display
+    if (list.length === 0) {
+      const isEmpty = subscriptions.length === 0;
+      grid.innerHTML = `
+        <div class="empty">
+          <div class="empty-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              ${isEmpty
+                ? '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'
+                : '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'}
+            </svg>
+          </div>
+          <h3>${isEmpty ? 'No subscriptions yet' : 'No results found'}</h3>
+          <p>${isEmpty
+            ? 'Start tracking your recurring expenses.'
+            : 'Try a different search or filter.'}</p>
+          ${isEmpty ? `<button class="btn-dark" onclick="openAdd()">Add First Subscription</button>` : ''}
+        </div>
+      `;
+      return;
+    }
+
+    
+    grid.innerHTML = list.map(sub => {
+      const days      = daysUntil(sub.date);
+      const isUrgent  = days >= 0 && days <= 3;
+      const urgentTag = isUrgent
+        ? `<span style="font-size:0.7rem;font-family:var(--font);"> (${days === 0 ? 'today' : days + 'd'})</span>`
+        : '';
+      const catKey = sub.category.toLowerCase().replace(' ', '-');
+      const cycleText = sub.cycle === 'Yearly' ? '/yr' : '/mo';
+      const monthNote = sub.cycle === 'Yearly'
+  ? `
+    <div class="detail-row">
+      <span class="detail-label">Monthly equiv.</span>
+      <span class="detail-value">${rupees(sub.cost / 12)}</span>
+    </div>
+  `
+  : `
+    <div class="detail-row">
+      <span class="detail-label">Yearly equiv.</span>
+      <span class="detail-value">${rupees(sub.cost * 12)}</span>
+    </div>
+  `;
+
+      return `
+        <div class="card">
+          <div class="card-top">
+  <div class="card-left">
+
+    <!-- LOGO ON LEFT -->
+    ${sub.logo ? `
+  <div class="card-logo-box">
+    <img src="${sub.logo}" 
+         class="card-logo"
+         onerror="this.style.display='none'">
+  </div>
+` : ''}
+
+    <!-- NAME + CATEGORY -->
+    <div>
+      <div class="card-name">${esc(sub.name)}</div>
+      <span class="pill pill-${catKey}">${esc(sub.category)}</span>
+    </div>
+
+  </div>
+            <div>
+              <div class="card-cost">${rupees(sub.cost)}</div>
+              <span class="card-cycle">${cycleText}</span>
+            </div>
+          </div>
+
+          <div class="card-details">
+            <div class="detail-row">
+              <span class="detail-label">Next billing</span>
+              <span class="detail-value ${isUrgent ? 'urgent' : ''}">${niceDate(sub.date)}${urgentTag}</span>
+            </div>
+            ${monthNote}
+            <div class="detail-row">
+              <span class="detail-label">Auto-pay</span>
+              <span class="pill ${sub.autopay ? 'autopay-on' : 'autopay-off'}">
+                ${sub.autopay ? '✓ On' : '✗ Off'}
+              </span>
+            </div>
+            ${sub.payment ? `
+  <div class="detail-row">
+    <span class="detail-label">Payment</span>
+    <span class="detail-value" style="display:flex;align-items:center;gap:8px;">
+      ${sub.payment === 'Card' 
+        ? `
+          ${sub.bankLogo ? `<img src="${sub.bankLogo}" style="width:20px;height:20px;border-radius:4px;">` : ''}
+          ${sub.bank || ''} •••• ${sub.last4}
+        ` 
+        : 'UPI'}
+    </span>
+  </div>
+` : ''}
+          </div>
+
+          <div class="card-actions">
+            <button class="btn-ghost"        onclick="openEdit('${sub.id}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button class="btn-delete-ghost" onclick="askDelete('${sub.id}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+
+
+
+  function openOverlay(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow = 'hidden';  // prevent background scroll
+  }
+  function closeOverlay(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Close when clicking the dark backdrop (not the modal itself)
+  document.getElementById('formOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeOverlay('formOverlay');
+  });
+  document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+    if (e.target === this) { deletingId = null; closeOverlay('confirmOverlay'); }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    closeOverlay('formOverlay');
+    closeOverlay('confirmOverlay');
+    deletingId = null;
+  });
+
+
+  /* ════════════════════════════════════════════
+     ADD / EDIT  —  open the form modal
+  ════════════════════════════════════════════ */
+
+  function openAdd() {
+    editingId = null;
+    document.getElementById('formTitle').textContent = 'Add Subscription';
+    document.getElementById('saveBtn').textContent   = 'Save';
+    document.getElementById('subForm').reset();
+
+    // UPDATED: Reset the custom dropdown display too
+    resetCustomDropdown();
+
+    // Default date = tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('fDate').value = tomorrow.toISOString().split('T')[0];
+
+    openOverlay('formOverlay');
+    // RESET PAYMENT METHOD
+document.getElementById('fPayment').value = 'UPI';
+
+// HIDE CARD DETAILS
+document.getElementById('cardDetails').style.display = 'none';
+
+// CLEAR BANK + LAST 4
+document.getElementById('fBank').value = '';
+document.getElementById('fCardLast4').value = '';
+
+// RESET BANK DISPLAY TEXT
+document.getElementById('bankDisplay').innerText = 'Choose bank…';
+  }
+
+  function openEdit(id) {
+    const sub = subscriptions.find(s => s.id === id);
+    if (!sub) return;
+
+    editingId = id;
+    document.getElementById('formTitle').textContent = 'Edit Subscription';
+    document.getElementById('saveBtn').textContent   = 'Update';
+
+    // Pre-fill the form with existing values
+    // UPDATED: populate the custom dropdown instead of the text input directly
+    prefillCustomDropdown(sub.name);
+    document.getElementById('fCost').value       = sub.cost;
+    document.getElementById('fCycle').value      = sub.cycle;
+    document.getElementById('fDate').value       = sub.date;
+    document.getElementById('fCategory').value   = sub.category;
+    document.getElementById('fAutopay').checked  = sub.autopay;
+
+    document.getElementById('fPayment').value = sub.payment || 'UPI';
+    handlePaymentChange();
+
+    document.getElementById('fBank').value = sub.bank || '';
+    document.getElementById('fCardLast4').value = sub.last4 || '';
+
+    if (sub.bank && sub.bankLogo) {
+      document.getElementById('bankDisplay').innerHTML =
+        `<img src="${sub.bankLogo}" class="bank-logo"> ${sub.bank}`;
+    } else {
+      document.getElementById('bankDisplay').innerText = 'Choose bank…';
+    }
+
+    openOverlay('formOverlay');
+  }
+
+  // Form submit — handles both add and edit
+  document.getElementById('subForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // UPDATED: read name from fName (set by custom dropdown); if "Others", use fNameOthers
+    let name = document.getElementById('fName').value.trim();
+    if (name === 'Others') {
+      name = document.getElementById('fNameOthers').value.trim();
+    }
+    const cost     = parseFloat(document.getElementById('fCost').value);
+    const cycle    = document.getElementById('fCycle').value;
+    const date     = document.getElementById('fDate').value;
+    const category = document.getElementById('fCategory').value;
+    const autopay  = document.getElementById('fAutopay').checked;
+
+    // Simple validation
+    if (!name || isNaN(cost) || cost < 0 || !date) {
+      toast('Please fill in all required fields.', true);
+      return;
+    }
+
+    if (editingId) {
+      // Update existing entry
+      subscriptions = subscriptions.map(s =>
+        s.id === editingId ? {
+          ...s,
+          name,
+          cost,
+          cycle,
+          date,
+          category,
+          autopay,
+          payment: document.getElementById('fPayment').value,
+          bank: document.getElementById('fBank').value,
+          last4: document.getElementById('fCardLast4').value,
+          bankLogo: document.querySelector('#bankDisplay img')?.src || '',
+        } : s
+      );
+      toast('Subscription updated.');
+    } else {
+    
+      subscriptions.push({ 
+  id: makeId(), 
+  name, 
+  cost, 
+  cycle, 
+  date, 
+  category, 
+  autopay,
+  logo: document.getElementById('fName').dataset.logo,
+  payment: document.getElementById('fPayment').value,
+  bank: document.getElementById('fBank').value,
+  last4: document.getElementById('fCardLast4').value,
+  bankLogo: document.querySelector('#bankDisplay img')?.src,
+});
+      toast('Subscription added.');
+    }
+
+    save();
+    closeOverlay('formOverlay');
+    processExpiredSubscriptions();
+  render();
+  });
+
+  document.getElementById('openAddBtn').addEventListener('click', openAdd);
+  document.getElementById('closeFormBtn').addEventListener('click', () => closeOverlay('formOverlay'));
+  document.getElementById('cancelFormBtn').addEventListener('click', () => closeOverlay('formOverlay'));
+
+
+  function askDelete(id) {
+    deletingId = id;
+    const sub  = subscriptions.find(s => s.id === id);
+    document.getElementById('confirmMsg').textContent =
+      `"${sub ? sub.name : 'this subscription'}" will be permanently removed.`;
+    openOverlay('confirmOverlay');
+  }
+
+  document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (!deletingId) return;
+    const name = (subscriptions.find(s => s.id === deletingId) || {}).name || 'Subscription';
+    subscriptions = subscriptions.filter(s => s.id !== deletingId);
+    deletingId = null;
+    save();
+    closeOverlay('confirmOverlay');
+    render();
+    toast(`"${name}" deleted.`);
+  });
+
+  document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+    deletingId = null;
+    closeOverlay('confirmOverlay');
+  });
+
+
+
+  document.getElementById('searchInput').addEventListener('input', function() {
+    searchText = this.value;
+    renderCards();
+  });
+
+  document.getElementById('filterCategory').addEventListener('change', function() {
+    filterCategory = this.value;
+    renderCards();
+  });
+
+  document.getElementById('sortBy').addEventListener('change', function() {
+    sortMode = this.value;
+    renderCards();
+  });
+
+
+  /* ════════════════════════════════════════════
+     TOAST  —  small notification at bottom-right
+  ════════════════════════════════════════════ */
+
+  function toast(message, isError = false) {
+    const el = document.createElement('div');
+    el.className = 'toast' + (isError ? ' error' : '');
+    el.textContent = message;
+    document.getElementById('toasts').appendChild(el);
+
+    // Auto-remove after 2.8 seconds
+    setTimeout(() => {
+      el.classList.add('hide');
+      el.addEventListener('animationend', () => el.remove());
+    }, 2800);
+  }
+
+
+  /* ════════════════════════════════════════════
+     SECURITY  —  escape HTML before inserting
+                  user text into innerHTML
+  ════════════════════════════════════════════ */
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  flatpickr("#fDate", {
+  dateFormat: "Y-m-d",     
+  altInput: true,
+  altFormat: "d M Y"        
+});
+
+
+
+  
+  const KNOWN_SERVICES = ['Netflix','Amazon Prime Video','JioHotstar','SonyLiv','Spotify','Apple Music','Zee5','ChatGPT','Gemini','Claude','Zomato Gold','Swiggy One'];
+
+
+  const SERVICE_LOGOS = {
+  'Netflix': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
+  'Amazon Prime Video': 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Prime_Video.png',
+  'JioHotstar': 'https://upload.wikimedia.org/wikipedia/en/2/26/Disney%2B_Hotstar_logo.svg',
+  'SonyLiv': 'https://upload.wikimedia.org/wikipedia/commons/6/62/SonyLIV_logo.svg',
+  'Spotify': 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
+  'Apple Music': 'https://upload.wikimedia.org/wikipedia/commons/d/d8/Apple_Music_logo.svg',
+  'Zee5': 'https://upload.wikimedia.org/wikipedia/commons/1/1d/ZEE5_logo.svg',
+  'ChatGPT': 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg',
+  'Gemini': 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Google_Gemini_logo.svg',
+  'Claude': 'https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg'
+};
+
+  
+  function toggleCustomDropdown() {
+    document.getElementById('customSelectWrapper').classList.toggle('open');
+  }
+
+  
+  document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('customSelectWrapper');
+    if (!wrapper.contains(e.target)) {
+      wrapper.classList.remove('open');
+    }
+  });
+
+  // Called when a list item is clicked
+  function selectService(li) {
+    const value = li.dataset.value;
+
+const img = li.querySelector('img'); // FIRST define img
+
+// ✅ NOW store logo correctly
+document.getElementById('fName').dataset.logo = img ? img.src : '';
+
+    // Mark selected visually
+    document.querySelectorAll('.cs-option').forEach(el => el.classList.remove('selected'));
+    li.classList.add('selected');
+
+    // Update the trigger button display
+    const display = document.getElementById('customSelectDisplay');
+    if (value === 'Others') {
+      display.innerHTML = '<span class="cs-others-icon">✏️</span> Others';
+    } else {
+      const img = li.querySelector('img');
+      display.innerHTML = `<img src="${img.src}" alt="${value}" style="width:22px;height:22px;object-fit:contain;"> ${value}`;
+    }
+
+    // Store value in the hidden fName input
+    document.getElementById('fName').value = value;
+
+    // Show/hide the "Others" free-text input
+    const othersInput = document.getElementById('fNameOthers');
+    if (value === 'Others') {
+      othersInput.style.display = 'block';
+      othersInput.required = true;
+      othersInput.focus();
+    } else {
+      othersInput.style.display = 'none';
+      othersInput.required = false;
+      othersInput.value = '';
+    }
+
+    // Close the dropdown
+    document.getElementById('customSelectWrapper').classList.remove('open');
+  }
+
+  // Reset dropdown to blank state (used in openAdd)
+  function resetCustomDropdown() {
+    document.getElementById('fName').value = '';
+    document.getElementById('fNameOthers').value = '';
+    document.getElementById('fNameOthers').style.display = 'none';
+    document.getElementById('fNameOthers').required = false;
+    document.getElementById('customSelectDisplay').innerHTML = '<span class="cs-placeholder">Choose a service…</span>';
+    document.querySelectorAll('.cs-option').forEach(el => el.classList.remove('selected'));
+  }
+
+  // Pre-fill the dropdown when editing an existing subscription
+  function prefillCustomDropdown(name) {
+    resetCustomDropdown();
+    if (KNOWN_SERVICES.includes(name)) {
+      // Find and simulate a click on the matching option
+      const options = document.querySelectorAll('.cs-option');
+      options.forEach(function(li) {
+        if (li.dataset.value === name) selectService(li);
+      });
+    } else {
+      // Treat as "Others" with a custom name
+      const othersLi = document.querySelector('.cs-option[data-value="Others"]');
+      selectService(othersLi);
+      document.getElementById('fNameOthers').value = name;
+    }
+  }
+  document.getElementById('openChartBtn').addEventListener('click', () => {
+  openOverlay('chartOverlay');
+
+  setTimeout(() => {
+    renderCategoryChart();
+
+    // 🔥 force chart to resize after modal is visible
+    setTimeout(() => {
+      if (categoryChart) {
+        categoryChart.resize();
+      }
+    }, 100);
+
+  }, 150);
+});
+document.getElementById('openAboutBtn').addEventListener('click', () => {
+  openOverlay('aboutOverlay');
+});
+
+
+  /* ════════════════════════════════════════════
+     START  —  render on page load
+  ════════════════════════════════════════════ */
+  render();
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCCyAjD4wB76OEitVaW-ZrGU9pp0uvVCh4",
+    authDomain: "getsorted-a423c.firebaseapp.com",
+    projectId: "getsorted-a423c",
+    storageBucket: "getsorted-a423c.appspot.com",
+    messagingSenderId: "87104435109",
+    appId: "1:87104435109:web:2648d7415731df48816e4c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const loginPage = document.getElementById("loginPage");
+  const appPage = document.getElementById("appPage");
+
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      loginPage.style.display = "none";
+      appPage.style.display = "block";
+    } else {
+      loginPage.style.display = "flex";
+      appPage.style.display = "none";
+    }
+  });
+
+  let authMode = 'login'; // 'login' or 'signup'
+
+  function getAuthFields() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    return { email, password };
+  }
+
+  function friendlyError(code) {
+    const map = {
+      'auth/invalid-email':          'Please enter a valid email address.',
+      'auth/missing-email':          'Please enter your email address.',
+      'auth/email-already-in-use':   'An account with this email already exists. Try logging in.',
+      'auth/weak-password':          'Password must be at least 6 characters.',
+      'auth/missing-password':       'Please enter a password.',
+      'auth/user-not-found':         'No account found with this email. Sign up first.',
+      'auth/wrong-password':         'Incorrect password. Please try again.',
+      'auth/too-many-requests':      'Too many attempts. Please wait a moment and try again.',
+      'auth/network-request-failed': 'Network error. Check your internet connection.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+
+  window.setSignupMode = function() {
+    authMode = 'signup';
+    document.getElementById('authTitle').textContent = 'Sign Up to GetSorted';
+    document.getElementById('authSwitch').style.display = 'block';
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('signupBtn').style.background = 'linear-gradient(135deg,#4F46E5,#7C3AED)';
+    document.getElementById('signupBtn').style.color = '#fff';
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('email').focus();
+  };
+
+  window.setLoginMode = function() {
+    authMode = 'login';
+    document.getElementById('authTitle').textContent = 'Login to GetSorted';
+    document.getElementById('authSwitch').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'inline-flex';
+    document.getElementById('signupBtn').style.background = '';
+    document.getElementById('signupBtn').style.color = '';
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('email').focus();
+  };
+
+  let authToastTimer = null;
+  function authToast(message) {
+    let el = document.getElementById('authToastEl');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'authToastEl';
+      document.body.appendChild(el);
+    }
+    el.classList.remove('hide');
+    el.textContent = message;
+    el.style.display = 'block';
+    if (authToastTimer) clearTimeout(authToastTimer);
+    authToastTimer = setTimeout(() => {
+      el.classList.add('hide');
+      el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
+    }, 3500);
+  }
+
+  window.handleSignupClick = function() {
+    if (authMode !== 'signup') { setSignupMode(); return; }
+    const { email, password } = getAuthFields();
+    if (!email) { authToast('Please enter your email address.'); return; }
+    if (!password) { authToast('Please enter a password.'); return; }
+    if (password.length < 6) { authToast('Password must be at least 6 characters.'); return; }
+    createUserWithEmailAndPassword(auth, email, password)
+      .catch(err => authToast(friendlyError(err.code)));
+  };
+
+  window.handleLoginClick = function() {
+    if (authMode !== 'login') { setLoginMode(); return; }
+    const { email, password } = getAuthFields();
+    if (!email) { authToast('Please enter your email address.'); return; }
+    if (!password) { authToast('Please enter a password.'); return; }
+    signInWithEmailAndPassword(auth, email, password)
+      .catch(err => authToast(friendlyError(err.code)));
+  };
+
+  window.logout = function () {
+    signOut(auth);
+  };
+</script>
+</body>
+</html>
